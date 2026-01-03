@@ -1,4 +1,4 @@
-import type { VideoDocument, Video, FirestoreTimestamp } from '@/types/video';
+import type { VideoDocument, Video, FirestoreTimestamp, VideoInput } from '@/types/video';
 
 /**
  * Firestore Timestamp를 Date로 변환하는 헬퍼 함수
