@@ -1,12 +1,6 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import {
-  getVideos,
-  getVideoById,
-  createOrUpdateVideo,
-  createVideos,
-} from '@/lib/firebase/videos';
 import type { Video, VideoInput, VideoQueryOptions } from '@/types/video';
 
 /**
@@ -17,15 +11,30 @@ export function useVideos() {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Video 리스트 조회
+   * Video 리스트 조회 (API Route 사용)
    */
   const fetchVideos = useCallback(
     async (options?: VideoQueryOptions): Promise<Video[]> => {
       setLoading(true);
       setError(null);
       try {
-        const videos = await getVideos(options);
-        return videos;
+        const params = new URLSearchParams();
+        if (options?.category) params.append('category', options.category);
+        if (options?.curatedDate) params.append('curatedDate', options.curatedDate);
+        if (options?.tags) params.append('tags', options.tags.join(','));
+        if (options?.orderBy) params.append('orderBy', options.orderBy);
+        if (options?.orderDirection) params.append('orderDirection', options.orderDirection);
+        if (options?.limit) params.append('limit', options.limit.toString());
+
+        const response = await fetch(`/api/videos?${params.toString()}`);
+        if (!response.ok) {
+          throw new Error('비디오를 가져오는데 실패했습니다.');
+        }
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || '비디오를 가져오는데 실패했습니다.');
+        }
+        return result.data || [];
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : '비디오를 가져오는 중 오류가 발생했습니다.';
@@ -39,15 +48,22 @@ export function useVideos() {
   );
 
   /**
-   * 단일 Video 조회
+   * 단일 Video 조회 (API Route 사용)
    */
   const fetchVideoById = useCallback(
     async (videoId: string): Promise<Video | null> => {
       setLoading(true);
       setError(null);
       try {
-        const video = await getVideoById(videoId);
-        return video;
+        const response = await fetch(`/api/videos?videoId=${videoId}`);
+        if (!response.ok) {
+          throw new Error('비디오를 가져오는데 실패했습니다.');
+        }
+        const result = await response.json();
+        if (!result.success) {
+          return null;
+        }
+        return result.data || null;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : '비디오를 가져오는 중 오류가 발생했습니다.';
@@ -61,15 +77,28 @@ export function useVideos() {
   );
 
   /**
-   * Video 생성 또는 업데이트
+   * Video 생성 또는 업데이트 (API Route 사용)
    */
   const saveVideo = useCallback(
     async (input: VideoInput): Promise<Video> => {
       setLoading(true);
       setError(null);
       try {
-        const video = await createOrUpdateVideo(input);
-        return video;
+        const response = await fetch('/api/videos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(input),
+        });
+        if (!response.ok) {
+          throw new Error('비디오를 저장하는데 실패했습니다.');
+        }
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || '비디오를 저장하는데 실패했습니다.');
+        }
+        return result.data;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : '비디오를 저장하는 중 오류가 발생했습니다.';
@@ -83,15 +112,28 @@ export function useVideos() {
   );
 
   /**
-   * 여러 Video 일괄 생성
+   * 여러 Video 일괄 생성 (API Route 사용)
    */
   const saveVideos = useCallback(
     async (inputs: VideoInput[]): Promise<Video[]> => {
       setLoading(true);
       setError(null);
       try {
-        const videos = await createVideos(inputs);
-        return videos;
+        const response = await fetch('/api/videos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(inputs),
+        });
+        if (!response.ok) {
+          throw new Error('비디오들을 저장하는데 실패했습니다.');
+        }
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || '비디오들을 저장하는데 실패했습니다.');
+        }
+        return result.data || [];
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : '비디오들을 저장하는 중 오류가 발생했습니다.';
