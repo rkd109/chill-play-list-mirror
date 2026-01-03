@@ -10,7 +10,13 @@ import { getCuratedDate } from '@/utils/firestore/video';
 export async function POST() {
   try {
     const now = new Date();
-    const curatedDate = getCuratedDate();
+    
+    // 각 비디오마다 다른 curatedDate 설정 (과거 날짜들)
+    const date1 = getCuratedDate(new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000)); // 5일 전
+    const date2 = getCuratedDate(new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000)); // 4일 전
+    const date3 = getCuratedDate(new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000)); // 3일 전
+    const date4 = getCuratedDate(new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)); // 2일 전
+    const date5 = getCuratedDate(new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000)); // 1일 전
 
     // 테스트용 임시 데이터
     const testVideos: VideoInput[] = [
@@ -24,7 +30,7 @@ export async function POST() {
         thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
         viewCount: 1500000000,
         publishedAt: new Date('2009-10-25T06:57:33Z'),
-        curatedDate: curatedDate,
+        curatedDate: date1, // 2024-XX-XX 형식
         curatedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), // 2일 전
         category: '음악',
         tags: ['팝', '클래식', '밈', '1980s'],
@@ -38,7 +44,7 @@ export async function POST() {
         thumbnail: 'https://i.ytimg.com/vi/jNQXAC9IVRw/maxresdefault.jpg',
         viewCount: 250000000,
         publishedAt: new Date('2005-04-23T20:57:33Z'),
-        curatedDate: curatedDate,
+        curatedDate: date2, // 2024-XX-XX 형식
         curatedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000), // 1일 전
         category: '역사',
         tags: ['역사', 'YouTube', '첫영상', '2005'],
@@ -53,7 +59,7 @@ export async function POST() {
         thumbnail: 'https://i.ytimg.com/vi/kJQP7kiw5Fk/maxresdefault.jpg',
         viewCount: 8500000000,
         publishedAt: new Date('2017-01-13T00:00:00Z'),
-        curatedDate: curatedDate,
+        curatedDate: date3, // 2024-XX-XX 형식
         curatedAt: now,
         category: '음악',
         tags: ['라틴', '팝', '레게톤', '히트곡'],
@@ -67,7 +73,7 @@ export async function POST() {
         thumbnail: 'https://i.ytimg.com/vi/9bZkp7q19f0/maxresdefault.jpg',
         viewCount: 5000000000,
         publishedAt: new Date('2012-07-15T00:00:00Z'),
-        curatedDate: curatedDate,
+        curatedDate: date4, // 2024-XX-XX 형식
         curatedAt: new Date(now.getTime() - 3 * 60 * 60 * 1000), // 3시간 전
         category: '음악',
         tags: ['K-pop', '한국', '힐링', '글로벌'],
@@ -82,7 +88,7 @@ export async function POST() {
         thumbnail: 'https://i.ytimg.com/vi/fJ9rUzIMcZQ/maxresdefault.jpg',
         viewCount: 2000000000,
         publishedAt: new Date('2008-10-01T00:00:00Z'),
-        curatedDate: curatedDate,
+        curatedDate: date5, // 2024-XX-XX 형식
         curatedAt: new Date(now.getTime() - 5 * 60 * 60 * 1000), // 5시간 전
         category: '음악',
         tags: ['록', '퀸', '클래식', '1970s'],
