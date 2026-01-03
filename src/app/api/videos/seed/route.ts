@@ -4,36 +4,8 @@ import type { VideoInput } from '@/types/video';
 import { getCuratedDate } from '@/utils/firestore/video';
 
 /**
- * @swagger
- * /api/videos/seed:
- *   post:
- *     summary: 테스트용 임시 데이터 생성
- *     description: 개발 및 테스트를 위한 샘플 Video 데이터 5개를 생성합니다.
- *     tags: [Videos]
- *     responses:
- *       201:
- *         description: 성공적으로 테스트 데이터 생성
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: 5개의 테스트 비디오가 생성되었습니다.
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Video'
- *       500:
- *         description: 서버 오류
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ * POST /api/videos/seed
+ * 테스트용 임시 데이터 생성
  */
 export async function POST() {
   try {

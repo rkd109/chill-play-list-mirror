@@ -9,90 +9,9 @@ import type { VideoInput, VideoQueryOptions } from '@/types/video';
 import { getCuratedDate } from '@/utils/firestore/video';
 
 /**
- * @swagger
- * /api/videos:
- *   get:
- *     summary: Video 리스트 조회
- *     description: Video 리스트를 조회합니다. 쿼리 파라미터로 필터링, 정렬, 페이지네이션이 가능합니다.
- *     tags: [Videos]
- *     parameters:
- *       - in: query
- *         name: videoId
- *         schema:
- *           type: string
- *         description: 단일 Video 조회 시 사용하는 Video ID
- *         example: dQw4w9WgXcQ
- *       - in: query
- *         name: category
- *         schema:
- *           type: string
- *         description: 카테고리 필터
- *         example: 음악
- *       - in: query
- *         name: curatedDate
- *         schema:
- *           type: string
- *           format: date
- *         description: 큐레이션 날짜 필터 (YYYY-MM-DD)
- *         example: 2024-05-20
- *       - in: query
- *         name: tags
- *         schema:
- *           type: string
- *         description: 태그 필터 (쉼표로 구분)
- *         example: 팝,클래식
- *       - in: query
- *         name: orderBy
- *         schema:
- *           type: string
- *           enum: [curatedAt, publishedAt, viewCount]
- *         description: 정렬 기준
- *         example: curatedAt
- *       - in: query
- *         name: orderDirection
- *         schema:
- *           type: string
- *           enum: [asc, desc]
- *         description: 정렬 방향
- *         example: desc
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: 결과 개수 제한
- *         example: 10
- *     responses:
- *       200:
- *         description: 성공적으로 Video 리스트를 반환
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Video'
- *                 count:
- *                   type: number
- *                   example: 5
- *       404:
- *         description: Video를 찾을 수 없음
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: 서버 오류
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ * GET /api/videos
+ * Video 리스트 조회
  */
-export async function GET(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -151,77 +70,8 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * @swagger
- * /api/videos:
- *   post:
- *     summary: Video 생성 또는 업데이트
- *     description: 단일 Video를 생성하거나 업데이트합니다. videoId가 이미 존재하면 업데이트됩니다.
- *     tags: [Videos]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             oneOf:
- *               - $ref: '#/components/schemas/VideoInput'
- *               - type: array
- *                 items:
- *                   $ref: '#/components/schemas/VideoInput'
- *                 description: 여러 Video를 일괄 생성
- *           examples:
- *             single:
- *               summary: 단일 Video 생성
- *               value:
- *                 videoId: dQw4w9WgXcQ
- *                 title: Rick Astley - Never Gonna Give You Up
- *                 description: The official video
- *                 customComment: 클래식한 인터넷 문화의 상징
- *                 thumbnail: https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg
- *                 viewCount: 1500000000
- *                 publishedAt: 2009-10-25T06:57:33Z
- *                 category: 음악
- *                 tags: [팝, 클래식, 밈]
- *             multiple:
- *               summary: 여러 Video 일괄 생성
- *               value:
- *                 - videoId: dQw4w9WgXcQ
- *                   title: Video 1
- *                   category: 음악
- *                 - videoId: jNQXAC9IVRw
- *                   title: Video 2
- *                   category: 역사
- *     responses:
- *       201:
- *         description: 성공적으로 Video 생성/업데이트
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   oneOf:
- *                     - $ref: '#/components/schemas/Video'
- *                     - type: array
- *                       items:
- *                         $ref: '#/components/schemas/Video'
- *                 count:
- *                   type: number
- *                   description: 일괄 생성 시 생성된 개수
- *       400:
- *         description: 잘못된 요청
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: 서버 오류
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ * POST /api/videos
+ * Video 생성 또는 업데이트
  */
 export async function POST(request: NextRequest) {
   try {
