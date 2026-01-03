@@ -1,5 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getAuth, type Auth } from 'firebase/auth';
 
 /**
  * Firebase 설정 타입
@@ -57,5 +58,13 @@ export function getFirestoreInstance(): Firestore {
  */
 export function getFirebaseApp(): FirebaseApp {
   return initializeFirebaseApp();
+}
+
+/**
+ * Firebase Auth 인스턴스 가져오기
+ */
+export function getAuthInstance(): Auth {
+  const app = initializeFirebaseApp();
+  return getAuth(app);
 }
 
