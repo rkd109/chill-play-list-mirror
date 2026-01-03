@@ -3,14 +3,13 @@ import {
   doc,
   getDoc,
   getDocs,
-  addDoc,
   setDoc,
   query,
   where,
   orderBy,
   limit,
+  Timestamp,
   type QueryConstraint,
-  type Timestamp,
 } from 'firebase/firestore';
 import { getFirestoreInstance } from './config';
 import type {
@@ -25,22 +24,6 @@ import {
 } from '@/utils/firestore/video';
 
 const COLLECTION_NAME = 'videos';
-
-/**
- * Firestore Timestamp를 Date로 변환
- */
-function convertFirestoreTimestamp(
-  timestamp: Timestamp | Date | string
-): Date {
-  if (timestamp instanceof Date) {
-    return timestamp;
-  }
-  if (typeof timestamp === 'string') {
-    return new Date(timestamp);
-  }
-  // Firestore Timestamp
-  return timestamp.toDate();
-}
 
 /**
  * Video ID로 단일 Video 조회
@@ -131,25 +114,33 @@ export async function createOrUpdateVideo(
     // VideoInput을 Firestore 문서 형태로 변환
     const documentData = convertVideoInputToDocument(input);
 
-    // Timestamp 변환 (서버에서 처리)
+    // Timestamp 변환 (Firestore Timestamp로 변환)
     const now = new Date();
     const firestoreData: VideoDocument = {
       ...documentData,
       publishedAt:
         input.publishedAt instanceof Date
-          ? input.publishedAt.toISOString()
+          ? Timestamp.fromDate(input.publishedAt)
+          : typeof input.publishedAt === 'string'
+          ? Timestamp.fromDate(new Date(input.publishedAt))
           : input.publishedAt,
       curatedAt:
         input.curatedAt instanceof Date
-          ? input.curatedAt.toISOString()
-          : input.curatedAt,
+          ? Timestamp.fromDate(input.curatedAt)
+          : typeof input.curatedAt === 'string'
+          ? Timestamp.fromDate(new Date(input.curatedAt))
+          : Timestamp.fromDate(now),
     };
 
     // 문서 생성 또는 업데이트
     await setDoc(videoRef, firestoreData, { merge: true });
 
     // 생성된 문서 반환
-    return await getVideoById(input.videoId);
+    const savedVideo = await getVideoById(input.videoId);
+    if (!savedVideo) {
+      throw new Error('비디오를 저장한 후 조회에 실패했습니다.');
+    }
+    return savedVideo;
   } catch (error) {
     console.error('Error creating/updating video:', error);
     throw new Error('비디오를 저장하는 중 오류가 발생했습니다.');

@@ -1,5 +1,5 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator, type Firestore } from 'firebase/firestore';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 /**
  * Firebase 설정 타입
@@ -45,36 +45,10 @@ function initializeFirebaseApp(): FirebaseApp {
 
 /**
  * Firestore 인스턴스 가져오기
- * Emulator 모드인 경우 자동으로 연결
  */
 export function getFirestoreInstance(): Firestore {
   const app = initializeFirebaseApp();
-  const db = getFirestore(app);
-
-  // Emulator 모드 확인 (서버 사이드에서만)
-  const useEmulator = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true';
-  const emulatorHost = process.env.NEXT_PUBLIC_FIREBASE_EMULATOR_HOST || 'localhost';
-  const emulatorPort = parseInt(
-    process.env.NEXT_PUBLIC_FIREBASE_EMULATOR_FIRESTORE_PORT || '8080',
-    10
-  );
-
-  // Emulator 연결 (서버 사이드에서만, 한 번만)
-  if (
-    useEmulator &&
-    typeof window === 'undefined' &&
-    !(db as any)._delegate?._settings?.host?.includes('localhost')
-  ) {
-    try {
-      connectFirestoreEmulator(db, emulatorHost, emulatorPort);
-      console.log(`Firestore Emulator connected: ${emulatorHost}:${emulatorPort}`);
-    } catch (error) {
-      // 이미 연결된 경우 무시
-      console.warn('Firestore Emulator connection warning:', error);
-    }
-  }
-
-  return db;
+  return getFirestore(app);
 }
 
 /**
