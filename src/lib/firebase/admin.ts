@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
 import { getAuth, type Auth } from 'firebase-admin/auth';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getFirebaseAdminConfig } from './client-server';
 
 let cachedAdminConfig: Awaited<ReturnType<typeof getFirebaseAdminConfig>> | null = null;
@@ -44,5 +45,14 @@ async function initializeAdminApp(): Promise<App> {
 export async function getAdminAuth(): Promise<Auth> {
   const app = await initializeAdminApp();
   return getAuth(app);
+}
+
+/**
+ * Firebase Admin Firestore 인스턴스 가져오기
+ * 서버 사이드에서 사용하며, 보안 규칙을 우회합니다.
+ */
+export async function getAdminFirestore(): Promise<Firestore> {
+  const app = await initializeAdminApp();
+  return getFirestore(app);
 }
 

@@ -1,7 +1,7 @@
 'use server';
 
 import { getAdminAuth } from '@/lib/firebase/admin';
-import { createVideos } from '@/lib/firebase/videos';
+import { createVideosServer } from '@/lib/firebase/videos-server';
 import type { VideoInput } from '@/types/video';
 import { getCuratedDate } from '@/utils/firestore/video';
 
@@ -75,8 +75,8 @@ export async function fetchTrendingVideos(idToken: string) {
       },
     ];
 
-    // 3. Firestore에 저장
-    const savedVideos = await createVideos(collectedVideos);
+    // 3. Firestore에 저장 (서버 사이드 Admin SDK 사용)
+    const savedVideos = await createVideosServer(collectedVideos);
 
     return {
       success: true,
