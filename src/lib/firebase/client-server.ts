@@ -53,12 +53,26 @@ function parseServiceAccountKey(): ServiceAccountKey {
   if (serviceAccountJson) {
     try {
       const parsed = JSON.parse(serviceAccountJson);
+      const parsedProjectId = parsed.project_id || parsed.projectId;
+      const parsedClientEmail = parsed.client_email || parsed.clientEmail;
+      const parsedPrivateKey = parsed.private_key || parsed.privateKey;
+
+      // 필수 필드 확인
+      if (!parsedProjectId || !parsedClientEmail || !parsedPrivateKey) {
+        throw new Error(
+          'FIREBASE_SERVICE_ACCOUNT_KEY에 필수 필드(project_id, client_email, private_key)가 없습니다.'
+        );
+      }
+
       return {
-        projectId: parsed.project_id || parsed.projectId,
-        clientEmail: parsed.client_email || parsed.clientEmail,
-        privateKey: parsed.private_key || parsed.privateKey,
+        projectId: parsedProjectId,
+        clientEmail: parsedClientEmail,
+        privateKey: parsedPrivateKey,
       };
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('필수 필드')) {
+        throw error;
+      }
       throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY가 유효한 JSON 형식이 아닙니다.');
     }
   }
@@ -72,9 +86,23 @@ function parseServiceAccountKey(): ServiceAccountKey {
     };
   }
 
-  throw new Error(
-    'Firebase Admin 설정이 완료되지 않았습니다. FIREBASE_SERVICE_ACCOUNT_KEY 또는 FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY를 설정해주세요.'
-  );
+  // 어떤 환경 변수가 설정되지 않았는지 확인하여 더 자세한 에러 메시지 제공
+  const missingVars: string[] = [];
+  if (!serviceAccountJson && !projectId) {
+    missingVars.push('FIREBASE_PROJECT_ID');
+  }
+  if (!serviceAccountJson && !clientEmail) {
+    missingVars.push('FIREBASE_CLIENT_EMAIL');
+  }
+  if (!serviceAccountJson && !privateKey) {
+    missingVars.push('FIREBASE_PRIVATE_KEY');
+  }
+
+  const errorMessage = missingVars.length > 0
+    ? `Firebase Admin 설정이 완료되지 않았습니다. 다음 환경 변수를 설정해주세요: ${missingVars.join(', ')} 또는 FIREBASE_SERVICE_ACCOUNT_KEY를 설정해주세요.`
+    : 'Firebase Admin 설정이 완료되지 않았습니다. FIREBASE_SERVICE_ACCOUNT_KEY 또는 FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY를 설정해주세요.';
+
+  throw new Error(errorMessage);
 }
 
 /**
@@ -107,11 +135,25 @@ export async function getFirebaseConfig(): Promise<FirebaseConfig> {
  */
 export async function getFirebaseAdminConfig(): Promise<FirebaseAdminConfig> {
   const serviceAccountKey = parseServiceAccountKey();
-  const projectId = getProjectId();
+  
+  // Service Account Key에서 projectId를 가져오거나, 환경 변수에서 가져오기
+  let projectId: string;
+  if (serviceAccountKey.projectId) {
+    projectId = serviceAccountKey.projectId;
+  } else {
+    // Service Account Key에 projectId가 없는 경우에만 환경 변수에서 가져오기
+    try {
+      projectId = getProjectId();
+    } catch {
+      throw new Error(
+        'Firebase Admin 설정이 완료되지 않았습니다. FIREBASE_SERVICE_ACCOUNT_KEY에 project_id가 없거나 FIREBASE_PROJECT_ID 환경 변수가 설정되지 않았습니다.'
+      );
+    }
+  }
 
   return {
     serviceAccountKey,
-    projectId: serviceAccountKey.projectId || projectId,
+    projectId,
   };
 }
 
