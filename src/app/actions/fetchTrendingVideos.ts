@@ -2,8 +2,9 @@
 
 import { getAdminAuth } from '@/lib/firebase/admin';
 import { createVideosServer } from '@/lib/firebase/videos-server';
+import { fetchYouTubeTrendingVideos } from '@/lib/youtube/api';
+import { convertYouTubeVideoToVideoInput } from '@/lib/youtube/converter';
 import type { VideoInput } from '@/types/video';
-import { getCuratedDate } from '@/utils/firestore/video';
 
 /**
  * Admin 이메일 주소
@@ -52,28 +53,13 @@ export async function fetchTrendingVideos(idToken: string) {
       };
     }
 
-    // 2. 인급동 데이터 수집 로직 (예시)
-    // TODO: 실제 인급동 API 호출 또는 데이터 수집 로직 구현
-    const now = new Date();
-    const curatedDate = getCuratedDate();
-
-    // 예시: 수집된 데이터 (실제로는 외부 API에서 가져옴)
-    const collectedVideos: VideoInput[] = [
-      // TODO: 실제 인급동 데이터로 교체
-      {
-        videoId: 'example1',
-        title: '인급동 수집 영상 1',
-        description: '인급동에서 수집한 영상입니다.',
-        customComment: '인급동 트렌딩 영상',
-        thumbnail: '',
-        viewCount: 0,
-        publishedAt: now,
-        curatedDate: curatedDate,
-        curatedAt: now,
-        category: '트렌딩',
-        tags: ['인급동', '트렌딩'],
-      },
-    ];
+    // 2. YouTube API를 통해 인기 영상 수집 (상위 10개)
+    const youtubeVideos = await fetchYouTubeTrendingVideos();
+    
+    // YouTube 영상 데이터를 VideoInput 형식으로 변환
+    const collectedVideos: VideoInput[] = youtubeVideos.map((video) =>
+      convertYouTubeVideoToVideoInput(video)
+    );
 
     // 3. Firestore에 저장 (서버 사이드 Admin SDK 사용)
     const savedVideos = await createVideosServer(collectedVideos);
