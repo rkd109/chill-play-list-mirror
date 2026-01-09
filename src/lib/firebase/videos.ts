@@ -11,7 +11,7 @@ import {
   Timestamp,
   type QueryConstraint,
 } from 'firebase/firestore';
-import { getFirestoreInstance } from './config';
+import { getClientFirestoreInstance } from './client';
 import type {
   VideoDocument,
   Video,
@@ -30,7 +30,7 @@ const COLLECTION_NAME = 'videos';
  */
 export async function getVideoById(videoId: string): Promise<Video | null> {
   try {
-    const db = getFirestoreInstance();
+    const db = await getClientFirestoreInstance();
     const videoRef = doc(db, COLLECTION_NAME, videoId);
     const videoSnap = await getDoc(videoRef);
 
@@ -53,7 +53,7 @@ export async function getVideos(
   options?: VideoQueryOptions
 ): Promise<Video[]> {
   try {
-    const db = getFirestoreInstance();
+    const db = await getClientFirestoreInstance();
     const videosRef = collection(db, COLLECTION_NAME);
 
     // 쿼리 제약 조건 생성
@@ -108,7 +108,7 @@ export async function createOrUpdateVideo(
   input: VideoInput
 ): Promise<Video> {
   try {
-    const db = getFirestoreInstance();
+    const db = await getClientFirestoreInstance();
     const videoRef = doc(db, COLLECTION_NAME, input.videoId);
 
     // VideoInput을 Firestore 문서 형태로 변환
