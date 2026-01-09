@@ -15,6 +15,13 @@ import {
 const COLLECTION_NAME = 'videos';
 
 /**
+ * Timestamp 타입 가드
+ */
+function isTimestamp(value: unknown): value is Timestamp {
+  return value instanceof Timestamp;
+}
+
+/**
  * 서버 사이드: Video ID로 단일 Video 조회 (Admin SDK 사용)
  */
 export async function getVideoByIdServer(videoId: string): Promise<Video | null> {
@@ -51,24 +58,35 @@ export async function createOrUpdateVideoServer(
 
     // Timestamp 변환 (Firestore Timestamp로 변환)
     const now = new Date();
+    
+    // publishedAt 변환
+    let publishedAtTimestamp: Timestamp;
+    if (input.publishedAt instanceof Date) {
+      publishedAtTimestamp = Timestamp.fromDate(input.publishedAt);
+    } else if (typeof input.publishedAt === 'string') {
+      publishedAtTimestamp = Timestamp.fromDate(new Date(input.publishedAt));
+    } else if (isTimestamp(input.publishedAt)) {
+      publishedAtTimestamp = input.publishedAt;
+    } else {
+      publishedAtTimestamp = Timestamp.fromDate(now);
+    }
+    
+    // curatedAt 변환
+    let curatedAtTimestamp: Timestamp;
+    if (input.curatedAt instanceof Date) {
+      curatedAtTimestamp = Timestamp.fromDate(input.curatedAt);
+    } else if (typeof input.curatedAt === 'string') {
+      curatedAtTimestamp = Timestamp.fromDate(new Date(input.curatedAt));
+    } else if (isTimestamp(input.curatedAt)) {
+      curatedAtTimestamp = input.curatedAt;
+    } else {
+      curatedAtTimestamp = Timestamp.fromDate(now);
+    }
+    
     const firestoreData: VideoDocument = {
       ...documentData,
-      publishedAt:
-        input.publishedAt instanceof Date
-          ? Timestamp.fromDate(input.publishedAt)
-          : typeof input.publishedAt === 'string'
-          ? Timestamp.fromDate(new Date(input.publishedAt))
-          : input.publishedAt instanceof Timestamp
-          ? input.publishedAt
-          : Timestamp.fromDate(now),
-      curatedAt:
-        input.curatedAt instanceof Date
-          ? Timestamp.fromDate(input.curatedAt)
-          : typeof input.curatedAt === 'string'
-          ? Timestamp.fromDate(new Date(input.curatedAt))
-          : input.curatedAt instanceof Timestamp
-          ? input.curatedAt
-          : Timestamp.fromDate(now),
+      publishedAt: publishedAtTimestamp,
+      curatedAt: curatedAtTimestamp,
     };
 
     // 문서 생성 또는 업데이트 (Admin SDK는 set 메서드 사용)
