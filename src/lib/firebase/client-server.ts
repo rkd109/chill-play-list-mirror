@@ -108,10 +108,20 @@ function parseServiceAccountKey(): ServiceAccountKey {
 /**
  * 서버 액션: Firebase 클라이언트 설정 정보 가져오기
  * 환경 변수는 서버에서만 접근 가능하므로 키 노출 방지
+ * 
+ * 주의: 이 함수는 클라이언트에서도 호출될 수 있으므로,
+ * Firebase 클라이언트 SDK 초기화용 API 키만 반환합니다.
+ * YouTube Data API 등 서버 전용 API는 별도로 관리해야 합니다.
  */
 export async function getFirebaseConfig(): Promise<FirebaseConfig> {
+  // Firebase 클라이언트 SDK 초기화용 API 키 (공개되어도 되는 키)
+  const clientApiKey = process.env.FIREBASE_API_KEY || '';
+  
+  // YouTube Data API용 키는 별도로 관리 (서버 전용)
+  // FIREBASE_API_KEY에 YouTube 권한이 포함된 경우, 클라이언트용과 분리 고려
+  
   const config: FirebaseConfig = {
-    apiKey: process.env.FIREBASE_API_KEY || '',
+    apiKey: clientApiKey,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
     projectId: getProjectId(),
     storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
@@ -127,6 +137,24 @@ export async function getFirebaseConfig(): Promise<FirebaseConfig> {
   }
 
   return config;
+}
+
+/**
+ * 서버 전용: YouTube Data API 키 가져오기
+ * Firebase API 키와 분리하여 관리 (보안 강화)
+ */
+export async function getYouTubeApiKey(): Promise<string> {
+  // 우선순위: YOUTUBE_API_KEY > FIREBASE_API_KEY
+  // YouTube 전용 키가 있으면 사용, 없으면 Firebase 키 사용 (하지만 권장하지 않음)
+  const youtubeApiKey = process.env.YOUTUBE_API_KEY || process.env.FIREBASE_API_KEY;
+  
+  if (!youtubeApiKey) {
+    throw new Error(
+      'YouTube API 키가 설정되지 않았습니다. YOUTUBE_API_KEY 또는 FIREBASE_API_KEY 환경 변수를 설정해주세요.'
+    );
+  }
+  
+  return youtubeApiKey;
 }
 
 /**

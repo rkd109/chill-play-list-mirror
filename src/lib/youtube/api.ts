@@ -1,6 +1,6 @@
 'use server';
 
-import { getFirebaseConfig } from '@/lib/firebase/client-server';
+import { getYouTubeApiKey as getServerYouTubeApiKey } from '@/lib/firebase/client-server';
 
 /**
  * YouTube API 응답 타입
@@ -33,14 +33,11 @@ interface YouTubeApiResponse {
 }
 
 /**
- * YouTube API 키 가져오기 (Firebase API 키 사용)
+ * YouTube API 키 가져오기 (서버 전용)
+ * 서버 액션을 통해 안전하게 키를 가져옵니다.
  */
 async function getYouTubeApiKey(): Promise<string> {
-  const config = await getFirebaseConfig();
-  if (!config.apiKey) {
-    throw new Error('FIREBASE_API_KEY 환경 변수가 설정되지 않았습니다. YouTube Data API 권한이 추가되었는지 확인해주세요.');
-  }
-  return config.apiKey;
+  return await getServerYouTubeApiKey();
 }
 
 /**
