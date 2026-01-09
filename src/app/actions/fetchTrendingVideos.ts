@@ -15,7 +15,7 @@ const ADMIN_EMAIL = 'rkdk24@gmail.com';
  */
 async function verifyAdminToken(idToken: string): Promise<boolean> {
   try {
-    const adminAuth = getAdminAuth();
+    const adminAuth = await getAdminAuth();
     
     // ID 토큰 검증
     const decodedToken = await adminAuth.verifyIdToken(idToken);
