@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/context/AuthContext';
-import { getAuthInstance } from '@/lib/firebase/config';
+import { getClientAuthInstance } from '@/lib/firebase/client';
+import { fetchTrendingVideos } from '@/app/actions/fetchTrendingVideos';
 
 /**
  * 관리자 전용 페이지 - 데이터 수집
@@ -23,7 +24,7 @@ export default function AdminFetchPage() {
   // 로그아웃 핸들러
   const handleLogout = async () => {
     try {
-      const auth = getAuthInstance();
+      const auth = await getClientAuthInstance();
       await signOut(auth);
       router.push('/');
     } catch (error) {
@@ -32,14 +33,47 @@ export default function AdminFetchPage() {
     }
   };
 
+  const [fetching, setFetching] = useState(false);
+  const [fetchResult, setFetchResult] = useState<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    count?: number;
+  } | null>(null);
+
   // 인급동 데이터 수집 핸들러
   const handleFetchData = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
     try {
-      // TODO: 인급동 데이터 수집 로직 구현
-      alert('인급동 데이터 수집 기능을 구현해주세요.');
+      setFetching(true);
+      setFetchResult(null);
+
+      // ID 토큰 가져오기
+      const idToken = await user.getIdToken();
+
+      // Server Action 호출
+      const result = await fetchTrendingVideos(idToken);
+
+      setFetchResult(result);
+
+      if (result.success) {
+        alert(result.message || `${result.count}개의 비디오를 수집했습니다.`);
+      } else {
+        alert(result.error || '데이터 수집에 실패했습니다.');
+      }
     } catch (error) {
       console.error('데이터 수집 오류:', error);
+      setFetchResult({
+        success: false,
+        error: error instanceof Error ? error.message : '데이터 수집 중 오류가 발생했습니다.',
+      });
       alert('데이터 수집 중 오류가 발생했습니다.');
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -82,10 +116,34 @@ export default function AdminFetchPage() {
             {/* 인급동 데이터 수집 버튼 */}
             <button
               onClick={handleFetchData}
-              className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              disabled={fetching}
+              className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              인급동 데이터 수집
+              {fetching ? '수집 중...' : '인급동 데이터 수집'}
             </button>
+
+            {/* 수집 결과 표시 */}
+            {fetchResult && (
+              <div
+                className={`rounded-lg p-4 ${
+                  fetchResult.success
+                    ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                    : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                }`}
+              >
+                <p
+                  className={
+                    fetchResult.success
+                      ? 'text-green-800 dark:text-green-200'
+                      : 'text-red-800 dark:text-red-200'
+                  }
+                >
+                  {fetchResult.success
+                    ? fetchResult.message || `${fetchResult.count}개의 비디오를 수집했습니다.`
+                    : fetchResult.error || '데이터 수집에 실패했습니다.'}
+                </p>
+              </div>
+            )}
 
             {/* 로그아웃 버튼 */}
             <button

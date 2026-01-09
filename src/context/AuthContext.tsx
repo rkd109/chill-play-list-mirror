@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { getAuthInstance } from '@/lib/firebase/config';
+import { getClientAuthInstance } from '@/lib/firebase/client';
 
 /**
  * Admin 이메일 주소
@@ -48,16 +48,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const auth = getAuthInstance();
+    let unsubscribe: (() => void) | null = null;
 
-    // onAuthStateChanged로 인증 상태 변경 감지
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
+    const initializeAuth = async () => {
+      const auth = await getClientAuthInstance();
+
+      // onAuthStateChanged로 인증 상태 변경 감지
+      unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+        setLoading(false);
+      });
+    };
+
+    initializeAuth();
 
     // 컴포넌트 언마운트 시 구독 해제
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   // 관리자 여부 확인 (이메일이 ADMIN_EMAIL과 일치하는 경우)
